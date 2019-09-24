@@ -42,7 +42,7 @@ func (v *loggerPlus) Printf(ctx Context, format string, a ...interface{}) {
 func (v *loggerPlus) contextFormat(ctx Context, a ...interface{}) []interface{} {
 	if ctx, ok := ctx.(context.Context); ok {
 		if cid, ok := ctx.Value(cidKey).(int); ok {
-			return append([]interface{}{fmt.Sprintf("[%v][%v] ", os.Getpid(), cid)}, a...)
+			return append([]interface{}{fmt.Sprintf("[%v][%v]", os.Getpid(), cid)}, a...)
 		}
 	} else {
 		return v.format(ctx, a...)
@@ -66,7 +66,7 @@ type key string
 
 var cidKey key = "cid.logger.ossrs.org"
 
-var gCid int = 99
+var gCid int = 999
 
 // Create context with value.
 func WithContext(ctx context.Context) context.Context {
@@ -75,9 +75,12 @@ func WithContext(ctx context.Context) context.Context {
 }
 
 // Create context with value from parent, copy the cid from source context.
-func CopyContext(parent context.Context, source context.Context) context.Context {
-	if cid, ok := source.Value(cidKey).(int); ok {
-		return context.WithValue(parent, cidKey, cid)
+// @remark Create new cid if source has no cid represent.
+func AliasContext(parent context.Context, source context.Context) context.Context {
+	if source != nil {
+		if cid, ok := source.Value(cidKey).(int); ok {
+			return context.WithValue(parent, cidKey, cid)
+		}
 	}
 	return WithContext(parent)
 }
